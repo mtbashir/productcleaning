@@ -468,10 +468,13 @@ async function lookup(code, source, fallbackToSearch){
     const r = await api('lookup', Object.assign(auth(), { barcode: code }));
     if(!r.found){
       busy(false);
-      if(fallbackToSearch){ await doSearch(code, 'No exact barcode match. These contain the digits you typed.'); return; }
       const n = $('#scanNotice');
-      n.innerHTML = 'No product with barcode <b class="code">'+esc(code)+'</b> in Current. Check the digits and try again.';
+      n.innerHTML = 'No product with barcode <b class="code">'+esc(code)+'</b>. Check the digits, or add it as a new product.' +
+        '<div style="margin-top:10px"><button class="btn primary small" type="button" id="btnAddNew">Add as new product</button></div>';
       n.hidden = false; $('#inQ').value = code;
+      $('#btnAddNew').addEventListener('click', () => startNew(code, source));
+      if(fallbackToSearch) await doSearch(code, 'No exact barcode match. These contain the digits you typed.');
+      $('#scanNotice').hidden = false;
       return;
     }
     if(!S.meta || !S.meta.fields) await refreshMeta();
@@ -482,6 +485,18 @@ async function lookup(code, source, fallbackToSearch){
     renderProduct(); show('product');
   }catch(err){ toast(err.message, true); }
   finally{ busy(false); S.busy = false; }
+}
+async function startNew(code, source){
+  try{ if(!S.meta || !S.meta.fields) { busy(true, 'Loading…'); await refreshMeta(); } }
+  catch(err){ toast(err.message, true); return; }
+  finally{ busy(false); }
+  const fields = S.meta.fields;
+  S.product = { found:true, isNew:true, barcode:code, row:'', fields, original: fields.map(() => ''), cleaned:null, source };
+  S.edits = fields.map(() => '');
+  S.photo = null;
+  $('#inQ').value = ''; $('#scanNotice').hidden = true; $('#resultsWrap').hidden = true;
+  renderProduct(); show('product');
+  setTimeout(() => { const f = document.querySelector('#v-product .fline input'); if(f) f.focus(); }, 100);
 }
 async function refreshMeta(){
   const r = await api('meta', auth());
@@ -529,7 +544,7 @@ function renderCats(){
   const path = catPath();
   $('#catRows').innerHTML = lv.map((fi,k) => {
     const v = path[k], orig = String(p.original[fi] ?? '').trim();
-    const changed = !eq(v, orig), invalid = !levelValid(k);
+    const changed = !p.isNew && !eq(v, orig), invalid = !levelValid(k);
     const upperEmpty = path.slice(0,k).some(x => !x);
     return '<div class="field'+(changed?' changed':'')+(invalid?' invalid':'')+'">' +
       '<span class="flabel" id="cl'+k+'">'+esc(p.fields[fi])+'</span>' +
@@ -539,7 +554,7 @@ function renderCats(){
       (changed ? '<div class="was"><span>Was: '+esc(orig || '(empty)')+'</span></div>' : '') +
     '</div>';
   }).join('');
-  $('#catRestore').hidden = !lv.some((fi,k) => !eq(path[k], p.original[fi] ?? ''));
+  $('#catRestore').hidden = p.isNew || !lv.some((fi,k) => !eq(path[k], p.original[fi] ?? ''));
   $('#catRows').querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
     const k = +b.dataset.k, fi = lv[k];
     openPicker({
@@ -566,8 +581,10 @@ $('#btnCatRestore').addEventListener('click', () => {
 function renderProduct(){
   const p = S.product, m = M();
   $('#pCode').textContent = p.barcode;
-  $('#pTitle').textContent = S.edits[0] || p.original[0] || 'Unnamed product';
-  $('#pMeta').textContent = 'Row ' + p.row + ' in Current, found by ' + ({Scan:'scan', Manual:'barcode', Search:'name search'}[p.source] || 'search');
+  $('#pTitle').textContent = S.edits[0] || p.original[0] || (p.isNew ? 'New product' : 'Unnamed product');
+  $('#pMeta').textContent = p.isNew
+    ? (p.cleaned ? 'New barcode, added earlier. Not in Current.' : 'New barcode. Fill in the details and save to add it.')
+    : 'Row ' + p.row + ' in Current, found by ' + ({Scan:'scan', Manual:'barcode', Search:'name search'}[p.source] || 'search');
   const c = $('#pCleaned');
   if(p.cleaned){
     c.innerHTML = 'Already saved by <b>'+esc(p.cleaned.user)+'</b> on '+esc(p.cleaned.timestamp)+
@@ -615,6 +632,7 @@ function renderProduct(){
     markField(el, i);
   });
   renderPhoto(); updateCount();
+  $('#btnSave').textContent = p.isNew && !p.cleaned ? 'Add product' : 'Save product';
 }
 /* Values for a field from Current. Context = category fields, so relevant values come first. */
 function contextFor(i){
@@ -643,9 +661,9 @@ async function loadOptions(i){
 function markField(el, i){
   const orig = S.product.original[i] ?? '';
   const changed = String(S.edits[i] ?? '').trim() !== String(orig).trim();
-  el.classList.toggle('changed', changed);
+  el.classList.toggle('changed', changed && !S.product.isNew);
   const was = el.querySelector('.was');
-  was.hidden = !changed;
+  was.hidden = !changed || S.product.isNew;
   was.querySelector('span').textContent = 'Was: ' + (orig === '' ? '(empty)' : orig);
   if(i === 0) $('#pTitle').textContent = S.edits[0] || 'Unnamed product';
   updateCount();
@@ -657,7 +675,9 @@ function updateCount(){
   if(!S.product) return;
   const n = changedCount();
   const bad = M().levels.some((fi,k) => !levelValid(k));
-  $('#changeCount').textContent = bad ? 'Fix the category first' : (n ? (n + (n===1?' field changed':' fields changed')) : 'No changes. Saves as verified');
+  $('#changeCount').textContent = bad ? 'Fix the category first'
+    : S.product.isNew ? (n + ' of ' + S.product.fields.length + ' fields filled')
+    : (n ? (n + (n===1?' field changed':' fields changed')) : 'No changes. Saves as verified');
   $('#changeCount').classList.toggle('err', bad);
 }
 
@@ -771,21 +791,26 @@ $('#btnSave').addEventListener('click', async () => {
     $('#catPanel').scrollIntoView({behavior:'smooth', block:'start'});
     return;
   }
+  if(p.isNew && !String(S.edits[0] ?? '').trim()){
+    toast('Enter ' + p.fields[0] + ' for the new product.', true);
+    const f = document.querySelector('#v-product .fline input'); if(f) f.focus();
+    return;
+  }
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   btn.disabled = true; btn.textContent = S.photo ? 'Uploading…' : 'Saving…';
   try{
     const r = await api('save', Object.assign(auth(), {
-      sessionId: S.session.id, barcode: p.barcode, row: p.row, source: p.source,
+      sessionId: S.session.id, barcode: p.barcode, row: p.row, source: p.source, isNew: !!p.isNew,
       values: S.edits, original: p.original,
       photo: S.photo ? { data: S.photo.split(',')[1], mime: 'image/jpeg' } : null
     }));
     S.session.saves.unshift({ barcode:p.barcode, name:S.edits[0]||'', changed:r.changed.length, photo:!!S.photo, status:r.status, time:new Date().toISOString() });
     persist(); updateBar();
     S.product = null; S.photo = null;
-    toast('Saved ' + p.barcode);
+    toast((r.status === 'New barcode' ? 'Added ' : 'Saved ') + p.barcode);
     enterScan();
   }catch(err){ toast(err.message, true); }
-  finally{ btn.disabled = false; btn.textContent = 'Save product'; }
+  finally{ btn.disabled = false; btn.textContent = S.product && S.product.isNew ? 'Add product' : 'Save product'; }
 });
 $('#btnBack').addEventListener('click', () => {
   if(hasUnsaved() && !confirm('Leave without saving your changes?')) return;
@@ -803,7 +828,7 @@ window.addEventListener('beforeunload', e => { if(hasUnsaved()){ e.preventDefaul
 function savesHtml(list){
   return list.map(s =>
     '<li><span class="bc">'+esc(s.barcode)+'</span><span class="nm">'+esc(s.name)+'</span>' +
-    '<span class="tag">'+(s.changed ? s.changed+(s.changed===1?' change':' changes') : 'verified')+(s.photo?', photo':'')+'</span></li>'
+    '<span class="tag">'+(s.status === 'New barcode' ? 'added' : (s.changed ? s.changed+(s.changed===1?' change':' changes') : 'verified'))+(s.photo?', photo':'')+'</span></li>'
   ).join('');
 }
 function renderRecent(){
@@ -832,7 +857,7 @@ function renderSummary(s, saves){
     : 'No products were saved in this session.';
   const rows = [
     ['Started', s.start], ['Ended', s.end],
-    ['New products', s.newCount], ['Re-edited products', s.reEdited],
+    ['Products cleaned for the first time', s.newCount], ['New barcodes added', s.added || 0], ['Re-edited products', s.reEdited],
     ['Verified with no changes', s.verified], ['Field changes', s.fieldChanges],
     ['Saved with a photo', s.withPhoto], ['Most changed fields', s.topFields || '–']
   ];
@@ -857,9 +882,9 @@ $('#btnAdmin').addEventListener('click', async () => {
     $('#openWrap').hidden = !open.length;
     $('#openTable').innerHTML = '<tr><th>User</th><th>First save</th><th>Last save</th><th>Saves</th><th>Session</th></tr>' +
       open.map(o => '<tr><td>'+esc(o.user)+'</td><td>'+esc(o.start)+'</td><td>'+esc(o.last)+'</td><td>'+esc(o.saves)+'</td><td>'+esc(o.sessionId)+'</td></tr>').join('');
-    $('#adminTable').innerHTML = '<tr><th>User</th><th>Ended</th><th>Minutes</th><th>Products</th><th>New</th><th>Re-edited</th><th>Verified</th><th>Changes</th><th>Photos</th><th>Most changed</th></tr>' +
-      (r.sessions.length ? r.sessions.map(s => '<tr><td>'+esc(s.user)+'</td><td>'+esc(s.end)+'</td><td>'+esc(s.minutes)+'</td><td>'+esc(s.products)+'</td><td>'+esc(s.newCount)+'</td><td>'+esc(s.reEdited)+'</td><td>'+esc(s.verified)+'</td><td>'+esc(s.fieldChanges)+'</td><td>'+esc(s.withPhoto)+'</td><td>'+esc(s.topFields)+'</td></tr>').join('')
-        : '<tr><td colspan="10" class="muted">No sessions have been ended yet.</td></tr>');
+    $('#adminTable').innerHTML = '<tr><th>User</th><th>Ended</th><th>Minutes</th><th>Products</th><th>First time</th><th>Added</th><th>Re-edited</th><th>Verified</th><th>Changes</th><th>Photos</th><th>Most changed</th></tr>' +
+      (r.sessions.length ? r.sessions.map(s => '<tr><td>'+esc(s.user)+'</td><td>'+esc(s.end)+'</td><td>'+esc(s.minutes)+'</td><td>'+esc(s.products)+'</td><td>'+esc(s.newCount)+'</td><td>'+esc(s.added||0)+'</td><td>'+esc(s.reEdited)+'</td><td>'+esc(s.verified)+'</td><td>'+esc(s.fieldChanges)+'</td><td>'+esc(s.withPhoto)+'</td><td>'+esc(s.topFields)+'</td></tr>').join('')
+        : '<tr><td colspan="11" class="muted">No sessions have been ended yet.</td></tr>');
     S.product = null;
     show('admin');
   }catch(err){ toast(err.message, true); }
