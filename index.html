@@ -132,6 +132,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 .opt .tick{color:var(--cobalt);font-weight:700}
 .opt.custom .ol b{color:var(--cobalt)}
 .opts .empty{padding:16px;color:var(--muted)}
+.opts .ghead{position:sticky;top:0;z-index:1;padding:8px 16px;font-size:.84rem;font-weight:650;color:var(--muted);background:var(--paper);border-top:1px solid var(--line)}
 
 /* summary + admin */
 .summary-line{font-size:1.55rem;font-stretch:112%;font-weight:700;line-height:1.2;margin:8px 0 16px;max-width:22ch}
@@ -238,7 +239,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 
     <div class="panel">
       <h3>Details</h3>
-      <p class="sub">Type to edit, or tap the arrow to pick an existing value.</p>
+      <p class="sub">Type to edit, or tap the arrow to pick a value already used in Current.</p>
       <div id="pFields"></div>
       <div class="photo-row">
         <img id="photoPrev" alt="Product photo preview" hidden>
@@ -293,7 +294,7 @@ mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbzm5YDLeA1cdPhvaLyO4nvN9E59D6Ps5m8Y7S7CI4uX23F2c3OPTsagdSBH-XZp2Oip/exec';
 
-const S = { auth:null, session:null, meta:null, product:null, edits:[], photo:null, scanner:null, scanning:false, busy:false };
+const S = { optCache:{}, auth:null, session:null, meta:null, product:null, edits:[], photo:null, scanner:null, scanning:false, busy:false };
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
@@ -563,7 +564,7 @@ $('#btnCatRestore').addEventListener('click', () => {
 
 /* ---------- product screen ---------- */
 function renderProduct(){
-  const p = S.product, m = M(), opts = (S.meta && S.meta.options) || {};
+  const p = S.product, m = M();
   $('#pCode').textContent = p.barcode;
   $('#pTitle').textContent = S.edits[0] || p.original[0] || 'Unnamed product';
   $('#pMeta').textContent = 'Row ' + p.row + ' in Current, found by ' + ({Scan:'scan', Manual:'barcode', Search:'name search'}[p.source] || 'search');
@@ -581,11 +582,10 @@ function renderProduct(){
   $('#pFields').innerHTML = p.fields.map((f,i) => {
     if(catIdx.has(i)) return '';
     const numeric = /^[\d.,\-\s]+$/.test(p.original[i] || '') && (p.original[i]||'').trim() !== '';
-    const hasOpts = Array.isArray(opts[i]) && opts[i].length;
     return '<div class="field" data-i="'+i+'">' +
       '<label for="f'+i+'">'+esc(f)+'</label>' +
       '<div class="fline"><input id="f'+i+'" value="'+esc(S.edits[i])+'" '+(numeric?'inputmode="decimal"':'')+' autocomplete="off" enterkeyhint="next">' +
-      (hasOpts ? '<button class="dd" type="button" aria-label="Choose '+esc(f)+' from a list">'+CHEV+'</button>' : '') + '</div>' +
+      '<button class="dd" type="button" aria-label="Choose '+esc(f)+' from a list">'+CHEV+'</button></div>' +
       '<div class="was" hidden><span></span><button class="linkbtn" type="button">Restore</button></div>' +
     '</div>';
   }).join('');
@@ -600,14 +600,45 @@ function renderProduct(){
       n ? n.focus() : input.blur();
     });
     el.querySelector('.was button').addEventListener('click', () => { S.edits[i] = p.original[i]; input.value = p.original[i]; markField(el, i); });
-    const dd = el.querySelector('.dd');
-    if(dd) dd.addEventListener('click', () => openPicker({
-      title: p.fields[i], items: opts[i].map(v => ({ label:v, value:v })), current: S.edits[i], allowCustom:true,
-      onPick: it => { S.edits[i] = it.value; input.value = it.value; markField(el, i); }
-    }));
+    el.querySelector('.dd').addEventListener('click', async () => {
+      const r = await loadOptions(i);
+      if(!r) return;
+      const ctxText = r.ctxText;
+      const items = r.related.map(v => ({ label:v, value:v, group: ctxText ? 'Used in ' + ctxText : '' }))
+        .concat(r.others.map(v => ({ label:v, value:v, group: (ctxText && r.related.length) ? 'All other values' : '' })));
+      openPicker({
+        title: p.fields[i], items, current: S.edits[i], allowCustom:true,
+        hint: r.total > items.length ? 'Showing the ' + items.length + ' most used of ' + r.total + ' values.' : '',
+        onPick: it => { S.edits[i] = it.value; input.value = it.value; markField(el, i); }
+      });
+    });
     markField(el, i);
   });
   renderPhoto(); updateCount();
+}
+/* Values for a field from Current. Context = category fields, so relevant values come first. */
+function contextFor(i){
+  const p = S.product, ctx = {}, parts = [];
+  const lv = M().levels;
+  p.fields.forEach((f,k) => {
+    if(k === i) return;
+    if(lv.indexOf(k) < 0 && !/cat/i.test(f)) return;
+    const v = String(S.edits[k] ?? '').trim();
+    if(v){ ctx[k] = v; parts.push(v); }
+  });
+  return { ctx, text: parts.join(SEP) };
+}
+async function loadOptions(i){
+  const c = contextFor(i), key = i + '|' + JSON.stringify(c.ctx);
+  if(S.optCache[key]) return S.optCache[key];
+  busy(true, 'Loading list…');
+  try{
+    const r = await api('options', Object.assign(auth(), { field:i, context:c.ctx }));
+    r.ctxText = c.text;
+    S.optCache[key] = r;
+    return r;
+  }catch(err){ toast(err.message, true); return null; }
+  finally{ busy(false); }
 }
 function markField(el, i){
   const orig = S.product.original[i] ?? '';
@@ -662,13 +693,19 @@ function openPicker({ title, items, current, onPick, allowCustom, hint }){
       res = prepared.map(it => ({ it, s: score(it._n, it._c, toks) })).filter(x => x.s >= 0)
         .sort((a,b) => b.s - a.s || a.it.label.length - b.it.label.length).map(x => x.it);
     }
+    if(toks.length && res.some(it => it.group)){
+      const order = [...new Set(prepared.map(it => it.group))];
+      res = res.map((it,ix) => ({it,ix})).sort((a,b) => order.indexOf(a.it.group) - order.indexOf(b.it.group) || a.ix - b.ix).map(x => x.it);
+    }
     shown = res.slice(0, 200);
     const typed = q.value.trim();
     let html = '';
     if(allowCustom && typed && !prepared.some(it => eq(it.label, typed))){
       html += '<li><button class="opt custom" type="button" data-custom="1"><span class="ol"><b>Use \u201C'+esc(typed)+'\u201D</b><small>Keep exactly what you typed</small></span></button></li>';
     }
+    let lastGroup = null;
     html += shown.map((it,ix) =>
+      ((it.group && it.group !== lastGroup) ? (lastGroup = it.group, '<li class="ghead">'+esc(it.group)+'</li>') : '') +
       '<li><button class="opt" type="button" role="option" data-ix="'+ix+'" aria-selected="'+(current && eq(it.label,current))+'">' +
         '<span class="ol"><b>'+hl(it.label,toks)+'</b>'+(it.sub ? '<small>'+hl(it.sub,toks)+'</small>' : '')+'</span>' +
         (current && eq(it.label, current) ? '<span class="tick" aria-hidden="true">\u2713</span>' : '') +
