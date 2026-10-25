@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F4FD8">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Product check</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,119 +13,156 @@
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{
-  --paper:#F6F7F4; --surface:#FFFFFF; --ink:#17202B; --muted:#5B6573; --line:#D8DCD4;
-  --cobalt:#1F4FD8; --cobalt-ink:#FFFFFF; --marker:#FFE066; --ok:#1E7F4F; --err:#B3261E;
-  color-scheme:light;
+  --paper:#F2F4F1; --surface:#FFFFFF; --ink:#17202B; --muted:#5B6573; --line:#DDE1DA;
+  --cobalt:#1F4FD8; --cobalt-ink:#FFFFFF; --cobalt-soft:#E7EDFD; --marker:#FFE066; --ok:#1E7F4F; --err:#B3261E; --err-soft:#FCEBEA;
+  --radius:14px; color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --paper:#11151B; --surface:#1A2028; --ink:#E7EBEE; --muted:#9AA4AF; --line:#2B333D;
-    --cobalt:#86A4FF; --cobalt-ink:#0E1420; --marker:#5E5014; --ok:#62C892; --err:#FF8A80;
+    --paper:#0F1318; --surface:#192028; --ink:#E7EBEE; --muted:#9AA4AF; --line:#2A323C;
+    --cobalt:#86A4FF; --cobalt-ink:#0E1420; --cobalt-soft:#1E2A47; --marker:#5E5014; --ok:#62C892; --err:#FF8A80; --err-soft:#3A1E1D;
     color-scheme:dark;
   }
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
-body{font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%}
-main{max-width:560px;margin:0 auto;padding:20px 16px 140px}
-h1,h2,h3{font-stretch:118%;font-weight:760;line-height:1.1;margin:0 0 8px}
-h1{font-size:2rem} h2{font-size:1.35rem} h3{font-size:1.05rem;margin-top:24px}
+body{font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.45;-webkit-text-size-adjust:100%;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+main{max-width:600px;margin:0 auto;padding:14px 14px calc(120px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-stretch:118%;font-weight:760;line-height:1.12;margin:0 0 8px}
+h1{font-size:2rem} h2{font-size:1.3rem} h3{font-size:1rem}
 p{margin:0 0 12px}
 .muted{color:var(--muted)}
 .err{color:var(--err)}
 [hidden]{display:none!important}
 button,input{font:inherit;color:inherit}
+button{touch-action:manipulation}
 :focus-visible{outline:3px solid var(--cobalt);outline-offset:2px}
+mark{background:var(--marker);color:inherit;border-radius:2px;padding:0 1px}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);font-weight:650;cursor:pointer;text-decoration:none}
 .btn.primary{background:var(--cobalt);border-color:var(--cobalt);color:var(--cobalt-ink)}
 .btn.block{width:100%}
+.btn.small{min-height:40px;padding:0 12px;font-size:.92rem;border-radius:10px}
 .btn:disabled{opacity:.55;cursor:default}
-.linkbtn{border:0;background:none;padding:4px 0;color:var(--cobalt);font-weight:600;cursor:pointer}
-.row{display:flex;gap:10px;align-items:center}
-.row > .grow{flex:1;min-width:0}
-
-input.text{width:100%;min-height:50px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:1.05rem}
-input.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px color-mix(in srgb,var(--cobalt) 25%,transparent)}
-.lbl{display:block;font-weight:600;margin:16px 0 6px}
+.linkbtn{border:0;background:none;padding:6px 0;color:var(--cobalt);font-weight:650;cursor:pointer}
+.text{width:100%;min-height:52px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);font-size:1.0625rem}
+.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px color-mix(in srgb,var(--cobalt) 25%,transparent)}
+.lbl{display:block;font-weight:650;margin:16px 0 6px}
 
 /* header */
-.bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
-.bar-inner{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:10px 16px}
-.who{flex:1;min-width:0;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.who small{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
-.bar .btn{min-height:40px;padding:0 12px;font-size:.92rem}
+.bar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.bar-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;gap:8px;padding:8px 14px;min-height:58px}
+.who{flex:1;min-width:0;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who small{display:block;font-weight:450;font-size:.85rem;color:var(--muted)}
 
 /* login */
-.login-hero{padding:32px 0 8px}
-.login-hero .code{display:block;margin-bottom:18px;color:var(--muted);font-size:1rem;letter-spacing:.3em}
+.login-hero{padding:36px 0 6px}
+.bars{display:block;margin-bottom:18px;height:28px;width:120px;background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 5px,var(--ink) 5px 9px,transparent 9px 11px,var(--ink) 11px 12px,transparent 12px 16px);opacity:.75}
 
-/* scanner */
-.reader-wrap{position:relative;border-radius:14px;overflow:hidden;background:#0D1117;min-height:260px;margin-top:8px}
-#reader{width:100%}
-#reader video{display:block;width:100%!important;height:auto!important}
-.reader-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;color:#C9D1D9}
+/* scan */
+.reader-wrap{position:relative;border-radius:var(--radius);overflow:hidden;background:#0B0F14;aspect-ratio:4/3;max-height:52vh;width:100%}
+#reader{width:100%;height:100%}
+#reader video{display:block;width:100%!important;height:100%!important;object-fit:cover}
+.reader-idle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:22px;text-align:center;color:#C9D1D9}
 .reader-idle p{margin:0;max-width:30ch}
-.scan-hint{margin:10px 0 0;font-size:.92rem}
-.or{display:flex;align-items:center;gap:12px;margin:22px 0 4px;color:var(--muted);font-size:.9rem}
-.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
-.notice{border-left:4px solid var(--err);background:var(--surface);padding:10px 12px;border-radius:0 8px 8px 0;margin-top:14px}
+.scan-hint{margin:8px 2px 0;font-size:.9rem}
+.searchbar{display:flex;gap:8px;margin-top:14px}
+.searchbar .text{flex:1;min-width:0}
+.notice{border-left:4px solid var(--err);background:var(--surface);padding:10px 12px;border-radius:0 10px 10px 0;margin-top:12px}
 .notice.info{border-left-color:var(--cobalt)}
-
-/* recent saves */
-.recent{list-style:none;margin:0;padding:0}
-.recent li{display:flex;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
-.recent .bc{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.9rem}
+.list{list-style:none;margin:0;padding:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin-top:14px;overflow:hidden}
+.panel > h3{padding:14px 16px 4px;margin:0}
+.panel > .sub{padding:0 16px 8px;margin:0;font-size:.88rem;color:var(--muted)}
+.result{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:12px 16px;cursor:pointer}
+.result:active{background:var(--cobalt-soft)}
+.result .nm{display:block;font-weight:600}
+.result .bc{display:block;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.85rem;color:var(--muted);margin-top:2px}
+.recent li{display:flex;gap:12px;align-items:baseline;padding:11px 16px;border-top:1px solid var(--line)}
+.recent .bc{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.88rem}
 .recent .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
 .recent .tag{font-size:.85rem;white-space:nowrap}
 
 /* product */
-.code{font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:600;letter-spacing:.08em}
-.product-code{font-size:clamp(1.5rem,7.5vw,2.2rem);margin:4px 0 2px;word-break:break-all}
-.product-title{font-size:1.15rem;font-weight:600;margin:0 0 4px}
-.fields{margin-top:12px;border-top:1px solid var(--line)}
-.field{padding:10px 0;border-bottom:1px solid var(--line)}
-.field label{display:block;font-size:.9rem;color:var(--muted);margin:0 0 2px 10px}
-.field input{width:100%;min-height:46px;padding:8px 10px;border:1px solid transparent;border-radius:8px;background:transparent;font-size:1.08rem}
-.field input:hover{border-color:var(--line)}
-.field input:focus{outline:none;border-color:var(--cobalt);background:var(--surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--cobalt) 25%,transparent)}
-.field.changed input:not(:focus){background:linear-gradient(transparent 14%,var(--marker) 14%,var(--marker) 86%,transparent 86%)}
-.was{display:flex;gap:12px;align-items:baseline;margin:2px 0 0 10px;font-size:.85rem;color:var(--muted)}
-.was span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.photo-box{margin-top:20px;display:flex;gap:14px;align-items:center}
-.photo-box img{width:84px;height:84px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
-.savebar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
-.savebar-inner{max-width:560px;margin:0 auto;display:flex;gap:10px;align-items:center}
-.savebar .count{flex:1;font-size:.92rem;color:var(--muted)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.code{font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:600;letter-spacing:.06em}
+.product-code{font-size:clamp(1.4rem,7vw,2.1rem);margin:6px 0 2px;word-break:break-all}
+.product-title{font-size:1.15rem;font-weight:650;margin:0 0 2px}
+.meta{font-size:.88rem}
+.findcat{display:flex;align-items:center;gap:10px;width:calc(100% - 32px);margin:6px 16px 12px;min-height:50px;padding:0 14px;border:1px dashed color-mix(in srgb,var(--cobalt) 55%,var(--line));border-radius:12px;background:var(--cobalt-soft);color:var(--cobalt);font-weight:650;cursor:pointer;text-align:left}
+.field{padding:10px 16px 12px;border-top:1px solid var(--line)}
+.field > label,.field .flabel{display:block;font-size:.88rem;color:var(--muted);margin:0 0 4px}
+.fline{display:flex;gap:8px;align-items:stretch}
+.fline input{flex:1;min-width:0;min-height:48px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:1.0625rem}
+.fline input:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px color-mix(in srgb,var(--cobalt) 25%,transparent)}
+.dd{flex:0 0 48px;min-height:48px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer;display:grid;place-items:center;color:var(--muted)}
+.dd svg,.pick svg{width:18px;height:18px}
+.pick{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);text-align:left;cursor:pointer;font-size:1.0625rem}
+.pick .pv{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick .pv.empty{color:var(--muted)}
+.pick:disabled{opacity:.5}
+.field.changed .fline input:not(:focus),.field.changed .pick .pv{background:linear-gradient(transparent 12%,var(--marker) 12%,var(--marker) 88%,transparent 88%)}
+.field.invalid .pick{border-color:var(--err);background:var(--err-soft)}
+.warn{color:var(--err);font-size:.86rem;margin:6px 0 0}
+.was{display:flex;gap:12px;align-items:baseline;margin-top:4px;font-size:.85rem;color:var(--muted)}
+.was span{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.restore-all{padding:4px 16px 12px}
+.photo-row{display:flex;gap:14px;align-items:center;padding:14px 16px}
+.photo-row img{width:76px;height:76px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px))}
+.savebar-inner{max-width:600px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.savebar .count{flex:1;font-size:.9rem;color:var(--muted);line-height:1.25}
+.savebar .btn{min-width:150px}
+
+/* bottom sheet picker */
+.sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(10,14,20,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:600px;max-height:88dvh;display:flex;flex-direction:column;background:var(--surface);border-radius:18px 18px 0 0;padding:8px 0 env(safe-area-inset-bottom,0px);box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.sheet-grip{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 8px}
+.sheet-head{display:flex;align-items:center;gap:10px;padding:0 16px 8px}
+.sheet-head h3{flex:1;margin:0;font-size:1.1rem}
+.sheet-search{padding:0 16px 8px}
+.sheet-hint{padding:0 16px 6px;margin:0;font-size:.85rem;color:var(--muted)}
+.opts{list-style:none;margin:0;padding:0 0 8px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1}
+.opt{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:10px 16px;border:0;border-top:1px solid var(--line);background:none;text-align:left;cursor:pointer}
+.opt:active,.opt.kb{background:var(--cobalt-soft)}
+.opt .ol{flex:1;min-width:0}
+.opt .ol b{display:block;font-weight:600}
+.opt .ol small{display:block;color:var(--muted);font-size:.84rem;margin-top:1px}
+.opt .tick{color:var(--cobalt);font-weight:700}
+.opt.custom .ol b{color:var(--cobalt)}
+.opts .empty{padding:16px;color:var(--muted)}
 
 /* summary + admin */
-.summary-line{font-size:1.6rem;font-stretch:112%;font-weight:700;line-height:1.2;margin:8px 0 18px;max-width:22ch}
+.summary-line{font-size:1.55rem;font-stretch:112%;font-weight:700;line-height:1.2;margin:8px 0 16px;max-width:22ch}
 .facts{width:100%;border-collapse:collapse}
-.facts td{padding:9px 0;border-bottom:1px solid var(--line);vertical-align:top}
-.facts td:last-child{text-align:right;font-weight:600;padding-left:12px}
-.table-wrap{overflow-x:auto;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.facts td{padding:11px 16px;border-top:1px solid var(--line);vertical-align:top}
+.facts td:last-child{text-align:right;font-weight:600}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .table-wrap table{border-collapse:collapse;min-width:640px;width:100%;font-size:.9rem}
-.table-wrap th,.table-wrap td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.table-wrap th,.table-wrap td{padding:9px 12px;border-top:1px solid var(--line);text-align:left;white-space:nowrap}
 .table-wrap th{font-weight:600;color:var(--muted)}
 
-/* toast + busy */
-.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);z-index:40;max-width:min(92vw,480px);padding:12px 16px;border-radius:10px;background:var(--ink);color:var(--paper);font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:70;width:max-content;max-width:min(92vw,480px);padding:12px 16px;border-radius:12px;background:var(--ink);color:var(--paper);font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 .toast.bad{background:var(--err);color:#fff}
-.busy{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--paper) 75%,transparent)}
+.busy{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--paper) 70%,transparent)}
 .busy div{background:var(--surface);border:1px solid var(--line);padding:14px 18px;border-radius:12px;font-weight:600}
 @media (prefers-reduced-motion:no-preference){
+  .sheet{animation:up .2s ease-out}
+  @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
   .toast{animation:pop .18s ease-out}
   @keyframes pop{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 }
+@media (min-width:640px){ .sheet-bg{align-items:center} .sheet{border-radius:18px;max-height:80vh} }
 </style>
 </head>
 <body>
 
 <header class="bar" id="bar" hidden>
   <div class="bar-inner">
-    <div class="who"><span id="barUser"></span><small id="barCount">0 saved this session</small></div>
-    <button class="btn" id="btnAdmin" hidden>All sessions</button>
-    <button class="btn" id="btnEnd">End session</button>
+    <div class="who"><span id="barUser"></span><small id="barCount">0 saved</small></div>
+    <button class="btn small" id="btnAdmin" hidden>Sessions</button>
+    <button class="btn small" id="btnEnd">End session</button>
   </div>
 </header>
 
@@ -131,13 +170,13 @@ input.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px co
   <!-- Login -->
   <section id="v-login">
     <div class="login-hero">
-      <span class="code" aria-hidden="true">||| |||| || |||</span>
+      <span class="bars" aria-hidden="true"></span>
       <h1>Product check</h1>
-      <p class="muted">Sign in with the user name you were given, then scan products to verify and correct their details.</p>
+      <p class="muted">Sign in, then scan products to verify and correct their details.</p>
     </div>
     <form id="loginForm" autocomplete="on">
       <label class="lbl" for="inUser">User name</label>
-      <input class="text" id="inUser" name="username" autocomplete="username" autocapitalize="off" required>
+      <input class="text" id="inUser" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required>
       <div id="pinWrap" hidden>
         <label class="lbl" for="inPin">Password</label>
         <input class="text" id="inPin" type="password" autocomplete="current-password">
@@ -149,47 +188,67 @@ input.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px co
 
   <!-- Scan -->
   <section id="v-scan" hidden>
-    <h2>Scan a product</h2>
     <div class="reader-wrap">
       <div id="reader"></div>
       <div class="reader-idle" id="readerIdle">
-        <p id="readerMsg">Point the back camera at the barcode.</p>
+        <p id="readerMsg">Point the back camera at a barcode.</p>
         <button class="btn primary" id="btnCam">Start camera</button>
       </div>
     </div>
-    <p class="scan-hint muted" id="scanHint" hidden>Hold the barcode inside the box. It scans automatically.</p>
+    <p class="scan-hint muted" id="scanHint" hidden>Hold the barcode inside the box. It scans by itself.</p>
 
-    <div class="or">or type it</div>
-    <form id="manualForm" class="row">
-      <input class="text grow" id="inCode" inputmode="numeric" autocomplete="off" placeholder="Barcode number" aria-label="Barcode number">
+    <form id="searchForm" class="searchbar" role="search">
+      <input class="text" id="inQ" type="search" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Barcode or product name" aria-label="Barcode or product name">
       <button class="btn primary" type="submit">Find</button>
     </form>
     <div class="notice" id="scanNotice" role="alert" hidden></div>
 
-    <div id="recentWrap" hidden>
+    <div class="panel" id="resultsWrap" hidden>
+      <h3 id="resultsHead">Matches</h3>
+      <p class="sub" id="resultsSub"></p>
+      <div id="results"></div>
+    </div>
+
+    <div class="panel" id="recentWrap" hidden>
       <h3>Saved this session</h3>
-      <ul class="recent" id="recent"></ul>
+      <ul class="list recent" id="recent"></ul>
     </div>
   </section>
 
   <!-- Product -->
   <section id="v-product" hidden>
-    <button class="linkbtn" id="btnBack">Back to scanning</button>
+    <div class="top">
+      <button class="linkbtn" id="btnBack">Back to scanning</button>
+    </div>
     <p class="code product-code" id="pCode"></p>
     <p class="product-title" id="pTitle"></p>
-    <p class="muted" id="pMeta" style="font-size:.9rem"></p>
+    <p class="muted meta" id="pMeta"></p>
     <div class="notice info" id="pCleaned" hidden></div>
 
-    <div class="fields" id="pFields"></div>
+    <div class="panel" id="catPanel" hidden>
+      <h3>Category</h3>
+      <p class="sub">Choose from the Master List. Each choice narrows the next one.</p>
+      <button class="findcat" id="btnFindCat" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        Search all categories
+      </button>
+      <div id="catRows"></div>
+      <div class="restore-all" id="catRestore" hidden><button class="linkbtn" id="btnCatRestore" type="button">Restore original categories</button></div>
+    </div>
 
-    <div class="photo-box">
-      <img id="photoPrev" alt="Product photo preview" hidden>
-      <div>
-        <button class="btn" id="btnPhoto" type="button">Take photo</button>
-        <button class="linkbtn" id="btnPhotoDel" type="button" hidden style="display:block;margin-top:6px">Remove photo</button>
-        <p class="muted" id="photoNote" style="font-size:.85rem;margin:6px 0 0">Optional</p>
+    <div class="panel">
+      <h3>Details</h3>
+      <p class="sub">Type to edit, or tap the arrow to pick an existing value.</p>
+      <div id="pFields"></div>
+      <div class="photo-row">
+        <img id="photoPrev" alt="Product photo preview" hidden>
+        <div>
+          <button class="btn small" id="btnPhoto" type="button">Take photo</button>
+          <button class="linkbtn" id="btnPhotoDel" type="button" hidden style="display:block;margin-top:4px">Remove photo</button>
+          <p class="muted" id="photoNote" style="font-size:.85rem;margin:6px 0 0">Optional</p>
+        </div>
+        <input id="inPhoto" type="file" accept="image/*" capture="environment" hidden>
       </div>
-      <input id="inPhoto" type="file" accept="image/*" capture="environment" hidden>
     </div>
 
     <div class="savebar">
@@ -202,12 +261,11 @@ input.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px co
 
   <!-- Summary -->
   <section id="v-summary" hidden>
-    <h2>Session ended</h2>
+    <h2 style="margin-top:8px">Session ended</h2>
     <p class="summary-line" id="sumLine"></p>
-    <table class="facts" id="sumFacts"></table>
-    <h3 id="sumListHead">Products</h3>
-    <ul class="recent" id="sumList"></ul>
-    <div style="display:grid;gap:10px;margin-top:24px">
+    <div class="panel"><table class="facts" id="sumFacts"></table></div>
+    <div class="panel" id="sumListWrap"><h3>Products</h3><ul class="list recent" id="sumList"></ul></div>
+    <div style="display:grid;gap:10px;margin-top:20px">
       <button class="btn primary block" id="btnNewSession">Start new session</button>
       <button class="btn block" id="btnLogout">Sign out</button>
     </div>
@@ -216,14 +274,16 @@ input.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px co
   <!-- Admin -->
   <section id="v-admin" hidden>
     <button class="linkbtn" id="btnAdminBack">Back to scanning</button>
-    <h2 style="margin-top:8px">All sessions</h2>
-    <div id="openWrap" hidden>
+    <h2 style="margin-top:6px">All sessions</h2>
+    <div class="panel" id="openWrap" hidden>
       <h3>Not ended yet</h3>
-      <p class="muted" style="font-size:.9rem">Saves are already in the sheet. These users closed the app without ending their session.</p>
+      <p class="sub">Their saves are already in the sheet. These users closed the app without ending the session.</p>
       <div class="table-wrap"><table id="openTable"></table></div>
     </div>
-    <h3>Ended sessions</h3>
-    <div class="table-wrap"><table id="adminTable"></table></div>
+    <div class="panel">
+      <h3>Ended sessions</h3>
+      <div class="table-wrap"><table id="adminTable"></table></div>
+    </div>
   </section>
 </main>
 
@@ -231,26 +291,51 @@ input.text:focus{outline:none;border-color:var(--cobalt);box-shadow:0 0 0 3px co
 <div class="busy" id="busy" hidden><div id="busyMsg">Working…</div></div>
 
 <script>
-/* ====== Paste your Apps Script Web app URL here ====== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbzm5YDLeA1cdPhvaLyO4nvN9E59D6Ps5m8Y7S7CI4uX23F2c3OPTsagdSBH-XZp2Oip/exec';
 
-const S = { cfg:null, auth:null, session:null, product:null, edits:[], photo:null, scanner:null, scanning:false, busy:false };
+const S = { auth:null, session:null, meta:null, product:null, edits:[], photo:null, scanner:null, scanning:false, busy:false };
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+const SEP = ' \u203A ';
+
+/* ---------- tokenized search ---------- */
+function normText(s){ return String(s ?? '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim(); }
+function tokens(q){ return normText(q).split(' ').filter(Boolean); }
+// Every token must appear somewhere (any order). Word-start matches rank higher.
+function score(hay, compact, toks){
+  let sc = 0;
+  for(const t of toks){
+    const i = hay.indexOf(t);
+    if(i >= 0){ sc += (i === 0 || hay[i-1] === ' ') ? 3 : 1; continue; }
+    if(compact.indexOf(t) >= 0){ sc += 1; continue; }
+    return -1;
+  }
+  return sc;
+}
+function hl(text, toks){
+  text = String(text ?? '');
+  if(!toks || !toks.length) return esc(text);
+  const low = text.toLowerCase(), on = new Array(text.length).fill(false);
+  toks.forEach(t => { let i = low.indexOf(t); while(i >= 0){ for(let j=i;j<i+t.length;j++) on[j]=true; i = low.indexOf(t, i+t.length); } });
+  let out = '', open = false;
+  for(let i=0;i<text.length;i++){
+    if(on[i] && !open){ out += '<mark>'; open = true; }
+    if(!on[i] && open){ out += '</mark>'; open = false; }
+    out += esc(text[i]);
+  }
+  return out + (open ? '</mark>' : '');
+}
 
 /* ---------- storage ---------- */
-function persist(){ try{ localStorage.setItem('pc_state', JSON.stringify({auth:S.auth, session:S.session})); }catch(e){} }
-function restore(){ try{ const s = JSON.parse(localStorage.getItem('pc_state')||'null'); if(s){ S.auth=s.auth; S.session=s.session; } }catch(e){} }
+function persist(){ try{ localStorage.setItem('pc_state', JSON.stringify({auth:S.auth, session:S.session, meta:S.meta})); }catch(e){} }
+function restore(){ try{ const s = JSON.parse(localStorage.getItem('pc_state')||'null'); if(s){ S.auth=s.auth; S.session=s.session; S.meta=s.meta||null; } }catch(e){} }
 
 /* ---------- api ---------- */
 async function api(action, payload={}){
-  const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // avoids CORS preflight with Apps Script
-    body: JSON.stringify(Object.assign({action}, payload))
-  });
+  const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(Object.assign({action}, payload)) });
   let data;
-  try{ data = await res.json(); }catch(e){ throw new Error('The server sent an unexpected reply. Check the Web app URL and deployment access.'); }
+  try{ data = await res.json(); }catch(e){ throw new Error('The server sent an unexpected reply. Check the Web app deployment.'); }
   if(!data.ok) throw new Error(data.error || 'Request failed.');
   return data;
 }
@@ -273,10 +358,9 @@ function updateBar(){
   if(!S.session) return;
   $('#barUser').textContent = S.auth.user;
   const n = S.session.saves.length;
-  $('#barCount').textContent = n + (n===1?' product':' products') + ' saved this session';
+  $('#barCount').textContent = n + (n===1?' product':' products') + ' saved';
   $('#btnAdmin').hidden = S.auth.role !== 'admin';
 }
-function minutesSince(iso){ return Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); }
 
 /* ---------- login ---------- */
 function newSession(){
@@ -293,20 +377,18 @@ $('#loginForm').addEventListener('submit', async e => {
     const pin = $('#inPin').value.trim();
     const r = await api('login', { user: $('#inUser').value.trim(), pin });
     S.auth = { user:r.user, role:r.role, pin };
+    S.meta = r.meta;
     S.session = newSession();
     persist(); enterScan();
   }catch(err){ $('#loginErr').textContent = err.message; }
   finally{ btn.disabled = false; btn.textContent = 'Sign in'; }
 });
-
 function enterScan(){ updateBar(); renderRecent(); show('scan'); startScanner(); }
 
 /* ---------- scanner ---------- */
 async function startScanner(){
-  if(S.scanning || typeof Html5Qrcode === 'undefined'){
-    if(typeof Html5Qrcode === 'undefined') $('#readerMsg').textContent = 'The scanner could not load. Check your internet connection, or type the barcode below.';
-    return;
-  }
+  if(typeof Html5Qrcode === 'undefined'){ $('#readerMsg').textContent = 'The scanner could not load. Check the internet connection, or type the barcode below.'; return; }
+  if(S.scanning) return;
   $('#scanNotice').hidden = true;
   try{
     if(!S.scanner){
@@ -319,7 +401,7 @@ async function startScanner(){
     }
     await S.scanner.start(
       { facingMode:'environment' },
-      { fps:12, aspectRatio:1.333, qrbox:(w,h) => ({ width:Math.max(120, Math.floor(w*0.86)), height:Math.max(80, Math.floor(Math.min(w,h)*0.42)) }) },
+      { fps:12, qrbox:(w,h) => ({ width:Math.max(140, Math.floor(w*0.86)), height:Math.max(80, Math.floor(Math.min(w,h)*0.42)) }) },
       onScan, () => {}
     );
     S.scanning = true;
@@ -327,7 +409,7 @@ async function startScanner(){
   }catch(err){
     S.scanning = false;
     $('#readerIdle').hidden = false; $('#scanHint').hidden = true;
-    $('#readerMsg').textContent = 'The camera is blocked or busy. Allow camera access for this site in your browser settings, then tap Start camera. You can also type the barcode below.';
+    $('#readerMsg').textContent = 'The camera is blocked or busy. Allow camera access for this site, then tap Start camera. You can also type below.';
   }
 }
 async function stopScanner(){
@@ -335,7 +417,7 @@ async function stopScanner(){
   S.scanning = false;
   try{ await S.scanner.stop(); }catch(e){}
   $('#readerIdle').hidden = false; $('#scanHint').hidden = true;
-  $('#readerMsg').textContent = 'Point the back camera at the barcode.';
+  $('#readerMsg').textContent = 'Point the back camera at a barcode.';
 }
 async function onScan(text){
   if(S.busy) return;
@@ -345,58 +427,165 @@ async function onScan(text){
   await lookup(text, 'Scan');
 }
 $('#btnCam').addEventListener('click', startScanner);
-$('#manualForm').addEventListener('submit', async e => {
+
+/* ---------- find by barcode or name ---------- */
+$('#searchForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const code = $('#inCode').value.trim();
-  if(!code) return;
+  const q = $('#inQ').value.trim();
+  if(!q) return;
+  $('#inQ').blur();
   S.busy = true; await stopScanner();
-  await lookup(code, 'Manual');
+  if(/^\d{6,}$/.test(q.replace(/\s/g,''))) await lookup(q.replace(/\s/g,''), 'Manual', true);
+  else await doSearch(q);
+  S.busy = false;
 });
+async function doSearch(q, note){
+  busy(true, 'Searching…');
+  try{
+    const r = await api('search', Object.assign(auth(), { q }));
+    const toks = tokens(q);
+    $('#scanNotice').hidden = true;
+    $('#resultsWrap').hidden = false;
+    $('#resultsHead').textContent = r.total ? (r.total + (r.total===1?' match':' matches')) : 'No matches';
+    $('#resultsSub').textContent = note || (r.total > r.results.length
+      ? 'Showing the first ' + r.results.length + '. Add another word to narrow it down.'
+      : (r.total ? 'Tap a product to open it.' : 'Every word you type must appear in the name or barcode. Try fewer or shorter words.'));
+    $('#results').innerHTML = r.results.map(x =>
+      '<button class="result" type="button" data-code="'+esc(x.barcode)+'"><span class="nm">'+hl(x.name || '(no name)', toks)+'</span><span class="bc">'+hl(x.barcode, toks)+'</span></button>'
+    ).join('');
+    $('#results').querySelectorAll('.result').forEach(b => b.addEventListener('click', () => lookup(b.dataset.code, 'Search')));
+    $('#resultsWrap').scrollIntoView({behavior:'smooth', block:'start'});
+  }catch(err){ toast(err.message, true); }
+  finally{ busy(false); }
+}
 
 /* ---------- lookup ---------- */
-async function lookup(code, source){
+async function lookup(code, source, fallbackToSearch){
   code = String(code).trim();
   busy(true, 'Finding ' + code + '…');
   try{
     const r = await api('lookup', Object.assign(auth(), { barcode: code }));
     if(!r.found){
+      busy(false);
+      if(fallbackToSearch){ await doSearch(code, 'No exact barcode match. These contain the digits you typed.'); return; }
       const n = $('#scanNotice');
-      n.innerHTML = 'No product with barcode <b class="code">'+esc(code)+'</b> in CURRENT. Check the digits and try again.';
-      n.hidden = false;
-      $('#inCode').value = code;
+      n.innerHTML = 'No product with barcode <b class="code">'+esc(code)+'</b> in Current. Check the digits and try again.';
+      n.hidden = false; $('#inQ').value = code;
       return;
     }
-    $('#inCode').value = '';
+    if(!S.meta || !S.meta.fields) await refreshMeta();
+    $('#inQ').value = ''; $('#resultsWrap').hidden = true;
     S.product = Object.assign(r, { source });
     S.edits = (r.cleaned ? r.cleaned.values : r.original).slice();
     S.photo = null;
     renderProduct(); show('product');
-  }catch(err){
-    toast(err.message, true);
-  }finally{
-    busy(false); S.busy = false;
-  }
+  }catch(err){ toast(err.message, true); }
+  finally{ busy(false); S.busy = false; }
+}
+async function refreshMeta(){
+  const r = await api('meta', auth());
+  S.meta = r.meta; persist();
 }
 
-/* ---------- product editing ---------- */
+/* ---------- Master List cascade ---------- */
+const M = () => (S.meta && S.meta.master) || { levels:[], rows:[] };
+const eq = (a,b) => String(a).trim().toLowerCase() === String(b).trim().toLowerCase();
+const catPath = () => M().levels.map(i => String(S.edits[i] ?? '').trim());
+function levelValid(k){
+  const p = catPath();
+  if(!p[k]) return true;
+  return M().rows.some(r => p.slice(0,k+1).every((v,j) => !v || eq(r[j], v)));
+}
+function levelItems(k){
+  const p = catPath(), seen = {}, items = [];
+  const upperMissing = p.slice(0,k).some(v => !v);
+  M().rows.forEach(r => {
+    if(!r[k]) return;
+    for(let j=0;j<k;j++) if(p[j] && !eq(r[j], p[j])) return;
+    const key = r.slice(0,k+1).join('\u0001').toLowerCase();
+    if(seen[key]) return; seen[key] = 1;
+    items.push({ label:r[k], sub: (k && upperMissing) ? r.slice(0,k).filter(Boolean).join(SEP) : '', value:r.slice(0,k+1) });
+  });
+  return items.sort((a,b) => a.label.localeCompare(b.label) || a.sub.localeCompare(b.sub));
+}
+function setCatPath(prefix, k){
+  const lv = M().levels;
+  for(let j=0;j<=k;j++) S.edits[lv[j]] = prefix[j] || '';
+  // clear anything deeper that no longer fits
+  for(let j=k+1;j<lv.length;j++) if(catPath()[j] && !levelValid(j)) S.edits[lv[j]] = '';
+  // fill the next level when there is only one possible choice
+  for(let j=k+1;j<lv.length;j++){
+    if(catPath()[j]) continue;
+    const opts = [...new Set(levelItems(j).map(x => x.label.toLowerCase()))];
+    if(opts.length === 1){ const it = levelItems(j)[0]; S.edits[lv[j]] = it.label; } else break;
+  }
+  renderCats(); updateCount();
+}
+function renderCats(){
+  const m = M(), p = S.product, lv = m.levels;
+  $('#catPanel').hidden = !lv.length;
+  if(!lv.length) return;
+  const path = catPath();
+  $('#catRows').innerHTML = lv.map((fi,k) => {
+    const v = path[k], orig = String(p.original[fi] ?? '').trim();
+    const changed = !eq(v, orig), invalid = !levelValid(k);
+    const upperEmpty = path.slice(0,k).some(x => !x);
+    return '<div class="field'+(changed?' changed':'')+(invalid?' invalid':'')+'">' +
+      '<span class="flabel" id="cl'+k+'">'+esc(p.fields[fi])+'</span>' +
+      '<button class="pick" type="button" data-k="'+k+'" aria-labelledby="cl'+k+'">' +
+        '<span class="pv'+(v?'':' empty')+'">'+(v ? esc(v) : (upperEmpty && k ? 'Choose (or pick a level above first)' : 'Choose'))+'</span>'+CHEV+'</button>' +
+      (invalid ? '<p class="warn">Not in the Master List. Tap to pick a valid one.</p>' : '') +
+      (changed ? '<div class="was"><span>Was: '+esc(orig || '(empty)')+'</span></div>' : '') +
+    '</div>';
+  }).join('');
+  $('#catRestore').hidden = !lv.some((fi,k) => !eq(path[k], p.original[fi] ?? ''));
+  $('#catRows').querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => {
+    const k = +b.dataset.k, fi = lv[k];
+    openPicker({
+      title: p.fields[fi],
+      items: levelItems(k),
+      current: path[k],
+      hint: k && path.slice(0,k).some(Boolean) ? 'Showing only options under ' + path.slice(0,k).filter(Boolean).join(SEP) + '.' : '',
+      onPick: it => setCatPath(it.value, k)
+    });
+  }));
+}
+$('#btnFindCat').addEventListener('click', () => {
+  const lv = M().levels;
+  const items = M().rows.map(r => ({ label: r.filter(Boolean).join(SEP), value: r }));
+  openPicker({ title:'Search all categories', items, current: catPath().filter(Boolean).join(SEP),
+    hint:'Type words from any level, in any order.', onPick: it => setCatPath(it.value, lv.length-1) });
+});
+$('#btnCatRestore').addEventListener('click', () => {
+  M().levels.forEach(fi => S.edits[fi] = S.product.original[fi] ?? '');
+  renderCats(); updateCount();
+});
+
+/* ---------- product screen ---------- */
 function renderProduct(){
-  const p = S.product;
+  const p = S.product, m = M(), opts = (S.meta && S.meta.options) || {};
   $('#pCode').textContent = p.barcode;
   $('#pTitle').textContent = S.edits[0] || p.original[0] || 'Unnamed product';
-  $('#pMeta').textContent = 'Row ' + p.row + ' in CURRENT, found by ' + (p.source === 'Scan' ? 'scan' : 'typing');
+  $('#pMeta').textContent = 'Row ' + p.row + ' in Current, found by ' + ({Scan:'scan', Manual:'barcode', Search:'name search'}[p.source] || 'search');
   const c = $('#pCleaned');
   if(p.cleaned){
     c.innerHTML = 'Already saved by <b>'+esc(p.cleaned.user)+'</b> on '+esc(p.cleaned.timestamp)+
-      '. You are seeing those values; highlights show what differs from CURRENT.' +
+      '. You are seeing those values; highlights show what differs from Current.' +
       (p.cleaned.photo ? ' <a href="'+esc(p.cleaned.photo)+'" target="_blank" rel="noopener">View saved photo</a>' : '');
     c.hidden = false;
   } else c.hidden = true;
 
+  renderCats();
+
+  const catIdx = new Set(m.levels);
   $('#pFields').innerHTML = p.fields.map((f,i) => {
+    if(catIdx.has(i)) return '';
     const numeric = /^[\d.,\-\s]+$/.test(p.original[i] || '') && (p.original[i]||'').trim() !== '';
+    const hasOpts = Array.isArray(opts[i]) && opts[i].length;
     return '<div class="field" data-i="'+i+'">' +
       '<label for="f'+i+'">'+esc(f)+'</label>' +
-      '<input id="f'+i+'" value="'+esc(S.edits[i])+'" '+(numeric?'inputmode="decimal"':'')+' autocomplete="off" enterkeyhint="next">' +
+      '<div class="fline"><input id="f'+i+'" value="'+esc(S.edits[i])+'" '+(numeric?'inputmode="decimal"':'')+' autocomplete="off" enterkeyhint="next">' +
+      (hasOpts ? '<button class="dd" type="button" aria-label="Choose '+esc(f)+' from a list">'+CHEV+'</button>' : '') + '</div>' +
       '<div class="was" hidden><span></span><button class="linkbtn" type="button">Restore</button></div>' +
     '</div>';
   }).join('');
@@ -405,14 +594,20 @@ function renderProduct(){
     const i = +el.dataset.i, input = el.querySelector('input');
     input.addEventListener('input', () => { S.edits[i] = input.value; markField(el, i); });
     input.addEventListener('keydown', e => {
-      if(e.key === 'Enter'){ e.preventDefault(); const next = $('#f'+(i+1)); next ? next.focus() : input.blur(); }
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      const all = [...$('#pFields').querySelectorAll('input')], n = all[all.indexOf(input)+1];
+      n ? n.focus() : input.blur();
     });
-    el.querySelector('.was button').addEventListener('click', () => {
-      S.edits[i] = p.original[i]; input.value = p.original[i]; markField(el, i);
-    });
+    el.querySelector('.was button').addEventListener('click', () => { S.edits[i] = p.original[i]; input.value = p.original[i]; markField(el, i); });
+    const dd = el.querySelector('.dd');
+    if(dd) dd.addEventListener('click', () => openPicker({
+      title: p.fields[i], items: opts[i].map(v => ({ label:v, value:v })), current: S.edits[i], allowCustom:true,
+      onPick: it => { S.edits[i] = it.value; input.value = it.value; markField(el, i); }
+    }));
     markField(el, i);
   });
-  renderPhoto();
+  renderPhoto(); updateCount();
 }
 function markField(el, i){
   const orig = S.product.original[i] ?? '';
@@ -422,8 +617,80 @@ function markField(el, i){
   was.hidden = !changed;
   was.querySelector('span').textContent = 'Was: ' + (orig === '' ? '(empty)' : orig);
   if(i === 0) $('#pTitle').textContent = S.edits[0] || 'Unnamed product';
-  const n = S.product.fields.filter((f,k) => String(S.edits[k]??'').trim() !== String(S.product.original[k]??'').trim()).length;
-  $('#changeCount').textContent = n ? (n + (n===1?' field changed':' fields changed')) : 'No changes. Saves as verified';
+  updateCount();
+}
+function changedCount(){
+  return S.product.fields.filter((f,k) => String(S.edits[k]??'').trim() !== String(S.product.original[k]??'').trim()).length;
+}
+function updateCount(){
+  if(!S.product) return;
+  const n = changedCount();
+  const bad = M().levels.some((fi,k) => !levelValid(k));
+  $('#changeCount').textContent = bad ? 'Fix the category first' : (n ? (n + (n===1?' field changed':' fields changed')) : 'No changes. Saves as verified');
+  $('#changeCount').classList.toggle('err', bad);
+}
+
+/* ---------- bottom sheet picker ---------- */
+function openPicker({ title, items, current, onPick, allowCustom, hint }){
+  const prepared = items.map(it => { const n = normText(it.label + ' ' + (it.sub||'')); return Object.assign({ _n:n, _c:n.replace(/ /g,'') }, it); });
+  const bg = document.createElement('div');
+  bg.className = 'sheet-bg';
+  bg.innerHTML =
+    '<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">' +
+      '<div class="sheet-grip" aria-hidden="true"></div>' +
+      '<div class="sheet-head"><h3 id="sheetTitle">'+esc(title)+'</h3><button class="btn small" type="button" data-close>Close</button></div>' +
+      '<div class="sheet-search"><input class="text" type="search" placeholder="Type to search" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-label="Search '+esc(title)+'"></div>' +
+      (hint ? '<p class="sheet-hint">'+esc(hint)+'</p>' : '') +
+      '<ul class="opts" role="listbox"></ul>' +
+    '</div>';
+  document.body.appendChild(bg);
+  const prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  const q = bg.querySelector('input'), list = bg.querySelector('.opts');
+  let shown = [];
+
+  function close(){ bg.remove(); document.body.style.overflow = prevOverflow; document.removeEventListener('keydown', onKey); }
+  function choose(it){ close(); onPick(it); }
+  function onKey(e){ if(e.key === 'Escape') close(); }
+  document.addEventListener('keydown', onKey);
+  bg.addEventListener('click', e => { if(e.target === bg || e.target.hasAttribute('data-close')) close(); });
+
+  function render(){
+    const toks = tokens(q.value);
+    let res = prepared;
+    if(toks.length){
+      res = prepared.map(it => ({ it, s: score(it._n, it._c, toks) })).filter(x => x.s >= 0)
+        .sort((a,b) => b.s - a.s || a.it.label.length - b.it.label.length).map(x => x.it);
+    }
+    shown = res.slice(0, 200);
+    const typed = q.value.trim();
+    let html = '';
+    if(allowCustom && typed && !prepared.some(it => eq(it.label, typed))){
+      html += '<li><button class="opt custom" type="button" data-custom="1"><span class="ol"><b>Use \u201C'+esc(typed)+'\u201D</b><small>Keep exactly what you typed</small></span></button></li>';
+    }
+    html += shown.map((it,ix) =>
+      '<li><button class="opt" type="button" role="option" data-ix="'+ix+'" aria-selected="'+(current && eq(it.label,current))+'">' +
+        '<span class="ol"><b>'+hl(it.label,toks)+'</b>'+(it.sub ? '<small>'+hl(it.sub,toks)+'</small>' : '')+'</span>' +
+        (current && eq(it.label, current) ? '<span class="tick" aria-hidden="true">\u2713</span>' : '') +
+      '</button></li>').join('');
+    if(!shown.length && !html) html = '<li class="empty">'+(items.length ? 'Nothing matches every word. Try fewer words.' : 'No options available for this level yet.')+'</li>';
+    if(res.length > shown.length) html += '<li class="empty">Showing 200 of '+res.length+'. Keep typing to narrow it down.</li>';
+    list.innerHTML = html;
+  }
+  list.addEventListener('click', e => {
+    const b = e.target.closest('.opt'); if(!b) return;
+    if(b.dataset.custom) choose({ label:q.value.trim(), value:q.value.trim() });
+    else choose(shown[+b.dataset.ix]);
+  });
+  q.addEventListener('input', render);
+  q.addEventListener('keydown', e => {
+    if(e.key !== 'Enter') return;
+    e.preventDefault();
+    const first = list.querySelector('.opt'); if(first) first.click();
+  });
+  render();
+  if(items.length > 8 || allowCustom) setTimeout(() => q.focus(), 60);
+  else bg.querySelector('[data-close]').focus();
 }
 
 /* ---------- photo ---------- */
@@ -453,7 +720,7 @@ function compress(file){
       URL.revokeObjectURL(img.src);
       resolve(c.toDataURL('image/jpeg', 0.8));
     };
-    img.onerror = () => reject(new Error('That image could not be read. Try taking the photo again.'));
+    img.onerror = () => reject(new Error('That image could not be read. Take the photo again.'));
     img.src = URL.createObjectURL(file);
   });
 }
@@ -461,6 +728,12 @@ function compress(file){
 /* ---------- save ---------- */
 $('#btnSave').addEventListener('click', async () => {
   const p = S.product, btn = $('#btnSave');
+  const badK = M().levels.findIndex((fi,k) => !levelValid(k));
+  if(badK >= 0){
+    toast('Pick ' + p.fields[M().levels[badK]] + ' from the Master List before saving.', true);
+    $('#catPanel').scrollIntoView({behavior:'smooth', block:'start'});
+    return;
+  }
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   btn.disabled = true; btn.textContent = S.photo ? 'Uploading…' : 'Saving…';
   try{
@@ -474,11 +747,8 @@ $('#btnSave').addEventListener('click', async () => {
     S.product = null; S.photo = null;
     toast('Saved ' + p.barcode);
     enterScan();
-  }catch(err){
-    toast(err.message, true);
-  }finally{
-    btn.disabled = false; btn.textContent = 'Save product';
-  }
+  }catch(err){ toast(err.message, true); }
+  finally{ btn.disabled = false; btn.textContent = 'Save product'; }
 });
 $('#btnBack').addEventListener('click', () => {
   if(hasUnsaved() && !confirm('Leave without saving your changes?')) return;
@@ -507,7 +777,7 @@ function renderRecent(){
 
 /* ---------- end session + summary ---------- */
 $('#btnEnd').addEventListener('click', async () => {
-  if(S.product && hasUnsaved() && !confirm('You have unsaved changes on this product. End the session anyway?')) return;
+  if(S.product && hasUnsaved() && !confirm('This product has unsaved changes. End the session anyway?')) return;
   if(!confirm('End this session and send the summary?')) return;
   busy(true, 'Ending session…');
   try{
@@ -530,14 +800,15 @@ function renderSummary(s, saves){
     ['Saved with a photo', s.withPhoto], ['Most changed fields', s.topFields || '–']
   ];
   $('#sumFacts').innerHTML = rows.map(r => '<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('');
-  $('#sumListHead').hidden = !saves.length;
+  $('#sumListWrap').hidden = !saves.length;
   $('#sumList').innerHTML = savesHtml(saves);
 }
 $('#btnNewSession').addEventListener('click', () => { S.session = newSession(); persist(); enterScan(); });
-$('#btnLogout').addEventListener('click', () => {
-  S.auth = null; S.session = null; persist();
+$('#btnLogout').addEventListener('click', logout);
+function logout(){
+  S.auth = null; S.session = null; S.meta = null; persist();
   $('#inUser').value = ''; $('#inPin').value = ''; updateBar(); show('login');
-});
+}
 
 /* ---------- admin ---------- */
 $('#btnAdmin').addEventListener('click', async () => {
@@ -561,17 +832,17 @@ $('#btnAdminBack').addEventListener('click', enterScan);
 
 /* ---------- start ---------- */
 (async function init(){
-  if(API_URL.indexOf('https://script.google.com/') !== 0){
-    $('#loginErr').textContent = 'Setup needed: paste your Apps Script Web app URL into API_URL in index.html.';
-    $('#btnLogin').disabled = true;
-    return;
-  }
   restore();
-  if(S.auth && S.session){ enterScan(); }
-  else { S.session = null; show('login'); }
+  if(S.auth && S.session){
+    enterScan();
+    try{ await refreshMeta(); }
+    catch(err){ if(/password|not found/i.test(err.message)){ logout(); $('#loginErr').textContent = 'Please sign in again.'; } }
+  } else {
+    S.session = null; show('login');
+  }
   try{
-    S.cfg = await api('config');
-    $('#pinWrap').hidden = !S.cfg.pinRequired;
+    const c = await api('config');
+    $('#pinWrap').hidden = !c.pinRequired;
   }catch(err){
     if(!S.session) $('#loginErr').textContent = 'Cannot reach the server: ' + err.message;
   }
